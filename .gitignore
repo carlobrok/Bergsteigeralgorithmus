@@ -1,4 +1,10 @@
-# Unterordner
+# Unterordner / weitere skripte
+
+Testskripte/
+all_svg_to_png.sh
+
+
+# Bilder und Datensätze
 
 *.png
 *.svg

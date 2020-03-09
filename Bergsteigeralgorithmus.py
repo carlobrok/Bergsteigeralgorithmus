@@ -37,6 +37,7 @@ parser.add_argument("-a", "--abnahme", type=float, help='Faktor der nächsten Sc
 # Zusätzlich
 parser.add_argument("-f", "--filename", help="Ausgabename der csv Datei", default="bergsteiger_ergebnisse")
 parser.add_argument("-d", "--dryrun",action='store_true', help="Kein Speichern, nur der Graph wird angezeigt")
+parser.add_argument("-i", "--image",action='store_true', help="Das Diagramm wird als svg-Bild Gespeichert")
 
 args, leftovers = parser.parse_known_args()
 
@@ -62,22 +63,22 @@ start_x = args.x
 start_y = args.y
 schrittlaenge = args.schrittlaenge
 
-#funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
+funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
 #funktion_str = 'exp(-(x**2+y**2))'
 #funktion_str = 'exp(-(x**2+y**2)) + 2* exp(-((x-1.7)**2 + (y-1.7)**2))'
 #funktion_str = 'cos(x)*sin(y)'
-funktion_str = '2*exp( -(x+5)**2 - (y-2)**2) + exp(-x**2-y**2) + 2* exp(-(x-2)**2 - (y-2)**2) + 0.5* exp(- (x+4)**2 - (y+2) **2)'
+#funktion_str = '2*exp( -(x+5)**2 - (y-2)**2) + exp(-x**2-y**2) + 2* exp(-(x-2)**2 - (y-2)**2) + 0.5* exp(- (x+4)**2 - (y+2) **2)'
 #funktion_str = '-(5*x**2 - 4*x*y + y**2 -2*x)'
 #funktion_str = '-(x**2+y**2)'
 #funktion_str = '1/20 * x * y * sin(x) * sin(y)'
 #funktion_str = 'sin(x) * cos(y)'
 
 def f(x,y):
-    #return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
+    return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
     #return exp(-(x**2+y**2))
     #return exp(-(x**2+y**2)) + 2* exp(-((x-1.7)**2 + (y-1.7)**2))
     #return cos(x)*sin(y)
-    return 2*exp( -(x+5)**2 - (y-2)**2) + exp(-x**2-y**2) + 2* exp(-(x-2)**2 - (y-2)**2) + 0.5* exp(- (x+4)**2 - (y+2) **2)
+    #return 2*exp( -(x+5)**2 - (y-2)**2) + exp(-x**2-y**2) + 2* exp(-(x-2)**2 - (y-2)**2) + 0.5* exp(- (x+4)**2 - (y+2) **2)
     #return -(5*x**2 - 4*x*y + y**2 -2*x)
     #return -(x**2+y**2)
     #return 1/20 * x * y * sin(x) * sin(y)
@@ -93,12 +94,16 @@ def neighbors(x,y, laenge):
 def distanz(x1,y1, x2,y2):
     return sqrt((x1-x2)**2 + (y1-y2)**2)
 
+def ausgelaufen(x,y):
+    if x < -10 or x > 10 or y < -10 or y > 10:
+        return True
+    return False
+
 
 def bergsteiger_normal(auslaufen_verhindern = False):
 
     max_schritte = args.max_schritte
 
-    variablen.append('schrittl='+str(schrittlaenge))
     variablen.append('max_schritte='+str(max_schritte))
 
     node = [start_x,start_y]
@@ -127,9 +132,16 @@ def bergsteiger_normal(auslaufen_verhindern = False):
             max_node = node
             max = f(node[0],node[1])
             break
-        else:
-            node = next_node
-            all_nodes = np.concatenate(( all_nodes, [[ next_node[0], next_node[1], f(next_node[0],next_node[1]) ]] ))
+
+        node = next_node
+        all_nodes = np.concatenate(( all_nodes, [[ next_node[0], next_node[1], f(next_node[0],next_node[1]) ]] ))
+
+        if auslaufen_verhindern and ausgelaufen(node[0],node[1]):
+            max_node = node
+            max = f(node[0],node[1])
+            print("*** Algorithmus ausgelaufen ***")
+            break
+
 
     return max_node, all_nodes
 
@@ -150,7 +162,6 @@ def bergsteiger_schrittlaenge_abnehmend(auslaufen_verhindern = False):
     max = -float('inf')
     max_node = None
 
-    variablen.append('schrittl='+str(local_schrittlaenge))
     variablen.append('min_schrittl='+str(min_schrittlaenge))
     variablen.append('abnahme='+str(abnahme))
     #variablen.append('auslaufen='+str(auslaufen_verhindern))
@@ -190,15 +201,13 @@ z = f(x, y)             # ex. function, which depends on x and y
 ax.plot_surface(x, y, z,cmap=cm.RdBu, alpha = 0.5);    # plot a 3d surface plot
 
 if args.normal is True:
-    max, nodes = bergsteiger_normal()
+    max, nodes = bergsteiger_normal(True)
 if args.schrittlaenge_abnehmend is True:
     max, nodes = bergsteiger_schrittlaenge_abnehmend()
 
 
 
-print(nodes)
-
-#z_nodes = [f(x_tmp,y_tmp) for (x_tmp, y_tmp) in zip(x_nodes, y_nodes)]
+#print(nodes)
 
 ax.scatter([node[0] for node in nodes], [node[1] for node in nodes], [node[2] for node in nodes], color = 'r', marker='.');                        # plot a 3d scatter plot
 
@@ -211,30 +220,32 @@ ax.set_zlabel('f(x,y)')
 
 if args.dryrun is False:
 
-    name = args.filename + '%s.csv'
+    csv_name = args.filename + '%s.csv'
 
-    i = 0
-    while os.path.exists(name % i):
-        i += 1
+    file_rotation_number = 0
+    while os.path.exists(csv_name % file_rotation_number):
+        file_rotation_number += 1
 
-    print(variablen)
+    csv_name = csv_name % file_rotation_number
 
-    with open(name % i, 'w', newline='') as csvfile:
+    with open(csv_name, 'w', newline='') as csvfile:
         fieldnames = ['x', 'y','z','iteration', 'funktion', 'start_x', 'start_y', 'schrittlaenge', 'variablen']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
-        for i in range(len(nodes)) :
-            if i == 0:
-                writer.writerow({'x' : nodes[i][0], 'y' : nodes[i][1], 'z' : nodes[i][2], 'iteration' : i, 'funktion': funktion_str, 'start_x': start_x, 'start_y': start_y, 'schrittlaenge':schrittlaenge, 'variablen': variablen})
+        for line_number in range(len(nodes)) :
+            if line_number == 0:
+                writer.writerow({'x' : nodes[line_number][0], 'y' : nodes[line_number][1], 'z' : nodes[line_number][2], 'iteration' : line_number, 'funktion': funktion_str, 'start_x': start_x, 'start_y': start_y, 'schrittlaenge':schrittlaenge, 'variablen': variablen})
             else :
-                writer.writerow({'x' : nodes[i][0], 'y' : nodes[i][1], 'z' : nodes[i][2], 'iteration' : i})
+                writer.writerow({'x' : nodes[line_number][0], 'y' : nodes[line_number][1], 'z' : nodes[line_number][2], 'iteration' : line_number})
 
+        print('csv: ' + csv_name)
+        print('csv gespeichert.')
+
+    if args.image:
+        image_name = args.filename + '%s.svg' % file_rotation_number
+        print("svg: " + image_name)
+        fig.savefig(image_name)
+        print("svg gespeichert.")
 
 plt.show()
-
-#name = input("Name der Outputgrafik (nichts, um nicht zu speichern): ")
-#if len(name) != 0:
-#	print("Name: " + name + ".svg")
-#	fig.savefig(name + '.svg')
-#	print("Gespeichert.")

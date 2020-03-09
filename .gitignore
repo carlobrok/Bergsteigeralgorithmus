@@ -9,3 +9,4 @@ all_svg_to_png.sh
 *.png
 *.svg
 *.csv
+*.~lock*

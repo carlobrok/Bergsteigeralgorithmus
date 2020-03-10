@@ -24,6 +24,8 @@ parser.add_argument("-sa", "--schrittlaenge_abnehmend", action='store_true', hel
 parser.add_argument("-sl", "--schrittlaenge", type=float, help="Schrittlänge der Algorithmen")
 parser.add_argument("-x", type=int, help="x Startkoordinate", default=randrange(-10,10,1))
 parser.add_argument("-y", type=int, help="y Startkoordinate", default=randrange(-10,10,1))
+parser.add_argument("-ar", "--auslaufen_random", action='store_true', help="Beim Auslaufen wird ein zufälliger neuer Startpunkt bestimmt")
+parser.add_argument("-ae", "--auslaufen_entgegen", action='store_true', help="Beim Auslaufen wird ein neuer Punkt entgegengesetzt der Auslaufrichtung gesetzt")
 
 
 # Normaler Algorithmus
@@ -100,7 +102,7 @@ def ausgelaufen(x,y):
     return False
 
 
-def bergsteiger_normal(auslaufen_verhindern = False):
+def bergsteiger_normal():
 
     max_schritte = args.max_schritte
 
@@ -136,11 +138,9 @@ def bergsteiger_normal(auslaufen_verhindern = False):
         node = next_node
         all_nodes = np.concatenate(( all_nodes, [[ next_node[0], next_node[1], f(next_node[0],next_node[1]) ]] ))
 
-        if auslaufen_verhindern and ausgelaufen(node[0],node[1]):
-            max_node = node
-            max = f(node[0],node[1])
-            print("*** Algorithmus ausgelaufen ***")
-            break
+        if args.auslaufen_random and ausgelaufen(node[0],node[1]):
+            print("*** Algorithmus ausgelaufen -> neuer zufälliger Punkt ***")
+            node = [randrange(-10,10,1),randrange(-10,10,1)]
 
 
     return max_node, all_nodes
@@ -201,7 +201,7 @@ z = f(x, y)             # ex. function, which depends on x and y
 ax.plot_surface(x, y, z,cmap=cm.RdBu, alpha = 0.5);    # plot a 3d surface plot
 
 if args.normal is True:
-    max, nodes = bergsteiger_normal(True)
+    max, nodes = bergsteiger_normal()
 if args.schrittlaenge_abnehmend is True:
     max, nodes = bergsteiger_schrittlaenge_abnehmend()
 
@@ -247,5 +247,7 @@ if args.dryrun is False:
         print("svg: " + image_name)
         fig.savefig(image_name)
         print("svg gespeichert.")
+
+plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
 
 plt.show()

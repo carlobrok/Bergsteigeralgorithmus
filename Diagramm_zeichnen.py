@@ -26,7 +26,7 @@ args, leftovers = parser.parse_known_args()
 # Skalierung des Diagramms
 max_x = 0
 max_y = 0
-
+min_y = 0
 
 cmap = plt.cm.get_cmap('Set2')
 
@@ -62,6 +62,8 @@ for i, filename in enumerate(args.file):
                     max_x = iteration
                 if funktionswert > max_y:
                     max_y = funktionswert
+                if funktionswert < min_y:
+                    min_y = funktionswert
 
                 # Finden des höchsten Funktionswerts, den der Algorithmus gefunden hat
                 if funktionswert > max_f:
@@ -118,7 +120,7 @@ plt.xlabel('Kosten [Iteration]')
 plt.ylabel('Funktionswert [z]')
 
 # Skalierung
-plt.axis([0 - max_x*0.1, max_x + max_x*0.1, 0 - max_y*0.1, max_y + max_y*0.1])
+plt.axis([0 - max_x*0.1, max_x + max_x*0.1, min_y - (max_y+min_y)*0.1, max_y + (max_y+min_y)*0.1])
 plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1)
 
 # Ein gepunktetes Diagramm-Gitter einblenden:

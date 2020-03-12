@@ -78,6 +78,7 @@ funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
 
 def f(x,y):
     #return ((x**2+y**2)/4000+exp(-(x**2+y**2)))
+    return  cos(x)*cos(y)*exp(-0.1*x**2)*exp(-0.1*y**2)
     return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
     #return exp(-(x**2+y**2))
     #return exp(-(x**2+y**2)) + 2* exp(-((x-1.7)**2 + (y-1.7)**2))

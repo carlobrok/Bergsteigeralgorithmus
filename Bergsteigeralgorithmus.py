@@ -38,9 +38,10 @@ parser.add_argument("-ml", "--min_len", type=float, help='Minimale Schrittlänge
 parser.add_argument("-a", "--abnahme", type=float, help='Faktor der nächsten Schrittlänge. (1 = gleich, 0.5 = hälfte, ...)')
 
 # Zusätzlich
-parser.add_argument("-f", "--filename", help="Ausgabename der csv Datei", default="bergsteiger_ergebnisse")
-parser.add_argument("-d", "--dryrun",action='store_true', help="Kein Speichern, nur der Graph wird angezeigt")
-parser.add_argument("-i", "--image",action='store_true', help="Das Diagramm wird als svg-Bild Gespeichert")
+parser.add_argument("-fa", "--funktion_allein", action='store_true', help="Es wird nur die Funktion angezeigt")
+parser.add_argument("-f", "--filename", help="Ausgabename der csv Datei")
+#parser.add_argument("-d", "--dryrun",action='store_true', help="Kein Speichern, nur der Graph wird angezeigt")
+parser.add_argument("-i", "--image",action='store_true', help="Das Diagramm wird als svg-Bild Gespeichert - filename muss angegeben sein")
 
 args, leftovers = parser.parse_known_args()
 
@@ -77,8 +78,8 @@ funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
 #funktion_str = 'sin(x) * cos(y)'
 
 def f(x,y):
-    #return ((x**2+y**2)/4000+exp(-(x**2+y**2)))
-    return  cos(x)*cos(y)*exp(-0.1*x**2)*exp(-0.1*y**2)
+    return ((x**2+y**2)/400+1.2**(-((x-4)**2+(y+6)**2)))
+    #return cos(x)*cos(y)*exp(-0.1*x**2)*exp(-0.1*y**2)
     return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
     #return exp(-(x**2+y**2))
     #return exp(-(x**2+y**2)) + 2* exp(-((x-1.7)**2 + (y-1.7)**2))
@@ -220,53 +221,51 @@ z = f(x, y)             # ex. function, which depends on x and y
 
 ax.plot_surface(x, y, z,cmap=cm.RdBu, alpha = 0.5);    # plot a 3d surface plot
 
-if args.normal is True:
-    max, nodes = bergsteiger_normal()
-if args.schrittlaenge_abnehmend is True:
-    max, nodes = bergsteiger_schrittlaenge_abnehmend()
+if not args.funktion_allein:
+    if args.normal:
+        max, nodes = bergsteiger_normal()
+    if args.schrittlaenge_abnehmend:
+        max, nodes = bergsteiger_schrittlaenge_abnehmend()
 
+    #print(nodes)
 
+    ax.scatter([node[0] for node in nodes], [node[1] for node in nodes], [node[2] for node in nodes], color = 'r', marker='.');                        # plot a 3d scatter plot
 
-#print(nodes)
+    ax.scatter(max[0], max[1], f(max[0],max[1])+0.05 , color = 'c', marker='^')                        # plot a 3d scatter plot
 
-ax.scatter([node[0] for node in nodes], [node[1] for node in nodes], [node[2] for node in nodes], color = 'r', marker='.');                        # plot a 3d scatter plot
+    if args.filename:
 
-ax.scatter(max[0], max[1], f(max[0],max[1])+0.05 , color = 'c', marker='^')                        # plot a 3d scatter plot
+        csv_name = args.filename + '%s.csv'
+
+        file_rotation_number = 0
+        while os.path.exists(csv_name % file_rotation_number):
+            file_rotation_number += 1
+
+        csv_name = csv_name % file_rotation_number
+
+        with open(csv_name, 'w', newline='') as csvfile:
+            fieldnames = ['x', 'y','z','iteration', 'funktion', 'start_x', 'start_y', 'schrittlaenge', 'variablen']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for line_number in range(len(nodes)) :
+                if line_number == 0:
+                    writer.writerow({'x' : nodes[line_number][0], 'y' : nodes[line_number][1], 'z' : nodes[line_number][2], 'iteration' : line_number, 'funktion': funktion_str, 'start_x': start_x, 'start_y': start_y, 'schrittlaenge':schrittlaenge, 'variablen': variablen})
+                else :
+                    writer.writerow({'x' : nodes[line_number][0], 'y' : nodes[line_number][1], 'z' : nodes[line_number][2], 'iteration' : line_number})
+
+            print('csv: ' + csv_name)
+            print('csv gespeichert.')
+
+        if args.image:
+            image_name = args.filename + '%s.svg' % file_rotation_number
+            print("svg: " + image_name)
+            fig.savefig(image_name)
+            print("svg gespeichert.")
 
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('f(x,y)')
-
-
-if args.dryrun is False:
-
-    csv_name = args.filename + '%s.csv'
-
-    file_rotation_number = 0
-    while os.path.exists(csv_name % file_rotation_number):
-        file_rotation_number += 1
-
-    csv_name = csv_name % file_rotation_number
-
-    with open(csv_name, 'w', newline='') as csvfile:
-        fieldnames = ['x', 'y','z','iteration', 'funktion', 'start_x', 'start_y', 'schrittlaenge', 'variablen']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for line_number in range(len(nodes)) :
-            if line_number == 0:
-                writer.writerow({'x' : nodes[line_number][0], 'y' : nodes[line_number][1], 'z' : nodes[line_number][2], 'iteration' : line_number, 'funktion': funktion_str, 'start_x': start_x, 'start_y': start_y, 'schrittlaenge':schrittlaenge, 'variablen': variablen})
-            else :
-                writer.writerow({'x' : nodes[line_number][0], 'y' : nodes[line_number][1], 'z' : nodes[line_number][2], 'iteration' : line_number})
-
-        print('csv: ' + csv_name)
-        print('csv gespeichert.')
-
-    if args.image:
-        image_name = args.filename + '%s.svg' % file_rotation_number
-        print("svg: " + image_name)
-        fig.savefig(image_name)
-        print("svg gespeichert.")
 
 plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
 

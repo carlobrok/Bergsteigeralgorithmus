@@ -26,6 +26,7 @@ parser.add_argument("-x", type=int, help="x Startkoordinate", default=randrange(
 parser.add_argument("-y", type=int, help="y Startkoordinate", default=randrange(-10,10,1))
 parser.add_argument("-ar", "--auslaufen_random", action='store_true', help="Beim Auslaufen wird ein zufälliger neuer Startpunkt bestimmt")
 parser.add_argument("-ae", "--auslaufen_entgegen", action='store_true', help="Beim Auslaufen wird ein neuer Punkt entgegengesetzt der Auslaufrichtung gesetzt")
+parser.add_argument("-aef", "--auslaufen_entgegen_faktor", type=float, help="Beim Auslaufen wird ein neuer Punkt entgegengesetzt der Auslaufrichtung gesetzt", default = 0.75)
 
 
 # Normaler Algorithmus
@@ -76,6 +77,7 @@ funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
 #funktion_str = 'sin(x) * cos(y)'
 
 def f(x,y):
+    #return ((x**2+y**2)/4000+exp(-(x**2+y**2)))
     return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
     #return exp(-(x**2+y**2))
     #return exp(-(x**2+y**2)) + 2* exp(-((x-1.7)**2 + (y-1.7)**2))
@@ -104,18 +106,21 @@ def ausgelaufen(x,y):
 
 def bergsteiger_normal():
 
+    local_start_x = start_x
+    local_start_y = start_y
+
     max_schritte = args.max_schritte
 
     variablen.append('max_schritte='+str(max_schritte))
 
-    node = [start_x,start_y]
+    node = [local_start_x,local_start_y]
 
     all_nodes = np.empty((0,3), float)
 
     all_nodes = np.append(all_nodes, [[node[0], node[1], f(node[0],node[1]) ]], axis=0)
 
     max = -float('inf')
-    max_node = None
+    max_node = [0,0]
 
     for i in range(max_schritte):           # maximal 1000 Schritte
 
@@ -142,11 +147,25 @@ def bergsteiger_normal():
             print("*** Algorithmus ausgelaufen -> neuer zufälliger Punkt ***")
             node = [randrange(-10,10,1),randrange(-10,10,1)]
 
+        if args.auslaufen_entgegen and ausgelaufen(node[0],node[1]):
+            print("*** Algorithmus ausgelaufen -> neuer Punkt entgegengesetzt der Auslaufrichtung ***")
+            #node = [-local_start_x, -local_start_y]
+            vector_as = np.array([local_start_x - node[0], local_start_y - node[1]])
+            print(vector_as)
+            vector_as = vector_as * (1+args.auslaufen_entgegen_faktor)
+            local_start_x = node[0] + vector_as[0]
+            local_start_y = node[1] + vector_as[1]
+            node[0] = node[0] + vector_as[0]
+            node[1] = node[1] + vector_as[1]
+            print(vector_as)
+
 
     return max_node, all_nodes
 
 
 def bergsteiger_schrittlaenge_abnehmend(auslaufen_verhindern = False):
+
+
 
     local_schrittlaenge = schrittlaenge
 

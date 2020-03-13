@@ -29,6 +29,7 @@ parser.add_argument("-ae", "--auslaufen_entgegen", action='store_true', help="Be
 parser.add_argument("-aef", "--auslaufen_entgegen_faktor", type=float, help="Beim Auslaufen wird ein neuer Punkt entgegengesetzt der Auslaufrichtung gesetzt", default = 0.75)
 
 
+
 # Normaler Algorithmus
 parser.add_argument("-ms", "--max_schritte", type=int, help='Maximale Anzahl an Schritten des normalen Algorithmus.', default = 1000)
 #parser.add_argument("--auslaufen_v", help='Wenn Aktiviert wird ein neuer')
@@ -40,7 +41,7 @@ parser.add_argument("-a", "--abnahme", type=float, help='Faktor der nächsten Sc
 # Zusätzlich
 parser.add_argument("-fa", "--funktion_allein", action='store_true', help="Es wird nur die Funktion angezeigt")
 parser.add_argument("-f", "--filename", help="Ausgabename der csv Datei")
-#parser.add_argument("-d", "--dryrun",action='store_true', help="Kein Speichern, nur der Graph wird angezeigt")
+parser.add_argument("-d", "--dryrun",action='store_true', help="Kein Speichern, nur der Graph wird angezeigt")
 parser.add_argument("-i", "--image",action='store_true', help="Das Diagramm wird als svg-Bild Gespeichert - filename muss angegeben sein")
 
 args, leftovers = parser.parse_known_args()
@@ -67,11 +68,13 @@ start_x = args.x
 start_y = args.y
 schrittlaenge = args.schrittlaenge
 
-funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
+#funktion_str = '((x**2+y**2)/400+1.2**(-((x-4)**2+(y+6)**2)))'
+#funktion_str = 'cos(x)*cos(y)*exp(-0.1*x**2)*exp(-0.1*y**2)'
+#funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
 #funktion_str = 'exp(-(x**2+y**2))'
 #funktion_str = 'exp(-(x**2+y**2)) + 2* exp(-((x-1.7)**2 + (y-1.7)**2))'
 #funktion_str = 'cos(x)*sin(y)'
-#funktion_str = '2*exp( -(x+5)**2 - (y-2)**2) + exp(-x**2-y**2) + 2* exp(-(x-2)**2 - (y-2)**2) + 0.5* exp(- (x+4)**2 - (y+2) **2)'
+funktion_str = '2*exp( -(x+5)**2 - (y-2)**2) + exp(-x**2-y**2) + 2* exp(-(x-2)**2 - (y-2)**2) + 0.5* exp(- (x+4)**2 - (y+2) **2)'
 #funktion_str = '-(5*x**2 - 4*x*y + y**2 -2*x)'
 #funktion_str = '-(x**2+y**2)'
 #funktion_str = '1/20 * x * y * sin(x) * sin(y)'
@@ -80,7 +83,7 @@ funktion_str = '(1-(x**2+y**3))*exp(-(x**2+y**2)/2)'
 def f(x,y):
     return ((x**2+y**2)/400+1.2**(-((x-4)**2+(y+6)**2)))
     #return cos(x)*cos(y)*exp(-0.1*x**2)*exp(-0.1*y**2)
-    return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
+    #return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
     #return exp(-(x**2+y**2))
     #return exp(-(x**2+y**2)) + 2* exp(-((x-1.7)**2 + (y-1.7)**2))
     #return cos(x)*sin(y)
@@ -208,6 +211,11 @@ def bergsteiger_schrittlaenge_abnehmend(auslaufen_verhindern = False):
 
         local_schrittlaenge = local_schrittlaenge * abnahme
 
+        if args.auslaufen_random and ausgelaufen(node[0],node[1]):
+            print("*** Algorithmus ausgelaufen -> neuer zufälliger Punkt ***")
+            node = [randrange(-10,10,1),randrange(-10,10,1)]
+#            local_schrittlaenge = schrittlaenge            führte zu unnötig vielen
+
     return max_node, all_nodes
 
 
@@ -233,7 +241,7 @@ if not args.funktion_allein:
 
     ax.scatter(max[0], max[1], f(max[0],max[1])+0.05 , color = 'c', marker='^')                        # plot a 3d scatter plot
 
-    if args.filename:
+    if args.filename and not args.dryrun:
 
         csv_name = args.filename + '%s.csv'
 

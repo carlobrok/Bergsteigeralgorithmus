@@ -2,6 +2,7 @@
 import csv
 import os
 import argparse as ap
+import argcomplete
 
 import numpy as np
 from numpy import exp, sqrt, sin, cos
@@ -44,6 +45,7 @@ parser.add_argument("-f", "--filename", help="Ausgabename der csv Datei")
 parser.add_argument("-d", "--dryrun",action='store_true', help="Kein Speichern, nur der Graph wird angezeigt")
 parser.add_argument("-i", "--image",action='store_true', help="Das Diagramm wird als svg-Bild Gespeichert - filename muss angegeben sein")
 
+argcomplete.autocomplete(parser)
 args, leftovers = parser.parse_known_args()
 
 
@@ -81,7 +83,7 @@ funktion_str = '2*exp( -(x+5)**2 - (y-2)**2) + exp(-x**2-y**2) + 2* exp(-(x-2)**
 #funktion_str = 'sin(x) * cos(y)'
 
 def f(x,y):
-    return ((x**2+y**2)/400+1.2**(-((x-4)**2+(y+6)**2)))
+    #return ((x**2+y**2)/400+1.2**(-((x-4)**2+(y+6)**2)))
     #return cos(x)*cos(y)*exp(-0.1*x**2)*exp(-0.1*y**2)
     #return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
     #return exp(-(x**2+y**2))
@@ -91,7 +93,7 @@ def f(x,y):
     #return -(5*x**2 - 4*x*y + y**2 -2*x)
     #return -(x**2+y**2)
     #return 1/20 * x * y * sin(x) * sin(y)
-    #return sin(x * 0.25) * cos(y * 0.25) * 1/30
+    return sin(x * 0.25) * cos(y * 0.25) * 1/30
 
 def neighbors(x,y, laenge):
     nbs = np.empty((0,2), float)

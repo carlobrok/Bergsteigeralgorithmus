@@ -1,7 +1,8 @@
 # Unterordner / weitere skripte
 
 Testskripte/
-all_svg_to_png.sh
+svg_to_png.sh
+Schritte_diagramm.py
 
 
 # Bilder und Datensätze
